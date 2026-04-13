@@ -489,7 +489,17 @@ class ScrcpyRelauncher(tk.Tk):
             self._stop_monitor.set()
 
         if self._process and self._process.poll() is None:
-            self._process.terminate()
+            # On Windows, terminate() is unreliable for GUI processes.
+            # Use kill() to forcefully end the process tree.
+            if sys.platform == "win32":
+                subprocess.run(
+                    ["taskkill", "/F", "/T", "/PID", str(self._process.pid)],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    creationflags=subprocess.CREATE_NO_WINDOW,
+                )
+            else:
+                self._process.terminate()
             try:
                 self._process.wait(timeout=5)
             except subprocess.TimeoutExpired:
@@ -698,7 +708,15 @@ class ScrcpyRelauncher(tk.Tk):
             pass
         self._stop_monitor.set()
         if self._process and self._process.poll() is None:
-            self._process.terminate()
+            if sys.platform == "win32":
+                subprocess.run(
+                    ["taskkill", "/F", "/T", "/PID", str(self._process.pid)],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    creationflags=subprocess.CREATE_NO_WINDOW,
+                )
+            else:
+                self._process.terminate()
         self.destroy()
 
 
